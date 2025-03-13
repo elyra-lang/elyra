@@ -1,0 +1,3 @@
+[submodule "ztracy"]
+	path = ztracy
+	url = https://github.com/zig-gamedev/ztracy.git

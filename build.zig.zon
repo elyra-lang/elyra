@@ -1,0 +1,19 @@
+.{
+    .name = .elyra,
+    .version = "0.0.0",
+
+    .fingerprint = 0x9a9c5efe4244cfa9, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
+
+    .dependencies = .{
+        .ztracy = .{
+            .path = "ztracy",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
