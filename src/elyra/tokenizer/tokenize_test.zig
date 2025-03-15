@@ -234,3 +234,15 @@ test "keywords" {
         .{ .kind = @intFromEnum(TokenKind.Pub), .position = 107 },
     }, token_buffer.tokens);
 }
+
+test "ignore utf8 bom" {
+    const source = "\xEF\xBB\xBFhello";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 3 },
+    }, token_buffer.tokens);
+}
