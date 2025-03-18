@@ -7,7 +7,8 @@
 
     .dependencies = .{
         .ztracy = .{
-            .path = "ztracy",
+            .url = "git+https://github.com/zig-gamedev/ztracy.git#d6f78fe19497a5b341329f6f67e9f9ba38635e8e",
+            .hash = "ztracy-0.14.0-dev-zHJSq08NFwD4iNq3K_gFxZ7Y8mMQ5wVM494x8c4R2sMz",
         },
     },
 
