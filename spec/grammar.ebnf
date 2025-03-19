@@ -1,0 +1,147 @@
+(* Basic character classes *)
+digit           = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+letter          = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" |
+                  "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" |
+                  "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" |
+                  "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" |
+                  "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
+underscore      = "_" ;
+(* For simplicity, we denote any character by a placeholder;
+   in a full lexer, this would be the set of allowed characters. *)
+any_char        = ? any character ? ;
+any_nonquote    = ? any character except a double quote ? ;
+
+(* Identifiers and Literals *)
+Identifier      = ( letter | underscore ), { letter | digit | underscore } ;
+IntLiteral      = digit, { digit } ;
+FloatLiteral    = digit, { digit }, ".", digit, { digit } ;
+StringLiteral   = "\"", { any_nonquote }, "\"" ;
+CharLiteral     = "'", any_char, "'" ;
+
+(* Punctuation and Delimiters *)
+LParen          = "(" ;
+RParen          = ")" ;
+LBrace          = "{" ;
+RBrace          = "}" ;
+LBracket        = "[" ;
+RBracket        = "]" ;
+Comma           = "," ;
+Dot             = "." ;
+Semicolon       = ";" ;
+Colon           = ":" ;
+Nullable        = "?" ;
+
+(* Operators *)
+Add             = "+" ;
+AddEq           = "+=" ;
+AddSat          = "+|" ;
+AddWrap         = "+%" ;
+AddSatEq        = "+|=" ;
+AddWrapEq       = "+%=" ;
+Sub             = "-" ;
+SubEq           = "-=" ;
+SubSat          = "-|" ;
+SubWrap         = "-%" ;
+SubSatEq        = "-|=" ;
+SubWrapEq       = "-%=" ;
+Mul             = "*" ;
+MulEq           = "*=" ;
+MulSat          = "*|" ;
+MulWrap         = "*%" ;
+MulSatEq        = "*|=" ;
+MulWrapEq       = "*%=" ;
+Div             = "/" ;
+DivEq           = "/=" ;
+Rem             = "%" ;
+RemEq           = "%=" ;
+BitAnd          = "&" ;
+BitAndEq        = "&=" ;
+BitOr           = "|" ;
+BitOrEq         = "|=" ;
+BitXor          = "^" ;
+BitXorEq        = "^=" ;
+BitNot          = "~" ;
+BitNotEq        = "~=" ;
+ErrUnion        = "!" ;
+NotEq           = "!=" ;
+Assign          = "=" ;
+Arrow           = "=>" ;
+Eq              = "==" ;
+Less            = "<" ;
+Greater         = ">" ;
+LessEq          = "<=" ;
+GreaterEq       = ">=" ;
+ShiftRight      = ">>" ;
+ShiftRightEq    = ">>=" ;
+ShiftLeft       = "<<" ;
+ShiftLeftEq     = "<<=" ;
+ShiftLeftSat    = "<<|" ;
+ShiftLeftSatEq  = "<<|=" ;
+CurryArrow      = "->" ;
+AddUnary        = "+" ;  (* same literal as Add, used in unary context *)
+SubUnary        = "-" ;  (* same literal as Sub, used in unary context *)
+
+(* Keywords *)
+True            = "true" ;
+False           = "false" ;
+Null            = "null" ;
+BooleanAnd      = "and" ;
+BooleanOr       = "or" ;
+Let             = "let" ;
+Var             = "var" ;
+Func            = "func" ;
+Return          = "return" ;
+Match           = "match" ;
+If              = "if" ;
+Else            = "else" ;
+Struct          = "struct" ;
+Trait           = "trait" ;
+Import          = "import" ;
+While           = "while" ;
+For             = "for" ;
+Break           = "break" ;
+Continue        = "continue" ;
+Temp            = "temp" ;
+Pub             = "pub" ;
+
+(* Comments start with # and go to end of line *)
+(* Comments are completely ignored by the parser *)
+Comment        = "#", { any_char }, "\n" Semicolon ;
+
+(* Script *)
+Script        = { VariableDeclaration | StructVariableDeclaration }, EOF, Semicolon ;
+
+(* Variable Declaration *)
+VariableDeclaration = [Pub], (Let | Var), Identifier, [TypeSpecifier], Assign, Expression, Semicolon ;
+
+(* Type Specifiers *)
+TypeSpecifier = Colon, [TypeModifier], Expression ;
+
+TypeModifier = Nullable, TypeModifier | LBracket, RBracket, TypeModifier | LBracket, Expression, RBracket, TypeModifier | Identifier, ErrUnion, TypeModifier ;
+
+(* Expressions *)
+PrimitiveExpression = Identifier | IntLiteral | FloatLiteral | StringLiteral | CharLiteral ;
+CallExpression = Identifier, LParen, [Expression, { Comma, Expression }], RParen ;
+IfExpression = If, LParen, Expression, RParen, Expression, [Else, Expression] ;
+BlockExpression = LBrace, { Expression }, RBrace ;
+ReturnExpression = Return, [Expression], Semicolon ;
+BreakExpression = Break, Semicolon ;
+ContinueExpression = Continue, Semicolon ;
+
+FunctionExpression = Func, LParen, [Parameter, {Comma, Parameter}], RParen, CurryArrow, Expression, BlockExpression ;
+Parameter = Identifier, [TypeSpecifier];
+
+StructExpression = Struct, LBrace, {VariableDeclaration | StructVariableDeclaration}, RBrace ;
+StructVariableDeclaration = Identifier, TypeSpecifier, Comma ;
+
+TraitExpression = Trait, LBrace, {VariableDeclaration}, RBrace ;
+
+WhileExpression = While, LParen, Expression, RParen, BlockExpression ;
+MatchExpression = Match, LParen, Expression, RParen, LBrace, {MatchCase}, RBrace ;
+MatchCase = Identifier, Arrow, Expression, Comma ;
+
+BinaryExpression = Expression, (Add | Sub | Mul | Div | Rem | BitAnd | BitOr | BitXor | ShiftRight | ShiftLeft | ShiftLeftSat), Expression ;
+UnaryExpression = (AddUnary | SubUnary | BitNot), Expression ;
+AssignExpression = Identifier, (Assign | AddEq | SubEq | MulEq | DivEq | RemEq | BitAndEq | BitOrEq | BitXorEq | ShiftRightEq | ShiftLeftEq | ShiftLeftSatEq), Expression, Semicolon ;
+
+Expression = PrimitiveExpression | CallExpression | IfExpression | BlockExpression | ReturnExpression | FunctionExpression | StructExpression | TraitExpression | WhileExpression | MatchExpression | BinaryExpression | UnaryExpression | AssignExpression ;
