@@ -1,0 +1,21 @@
+.{
+    .name = .benchmark,
+    .version = "0.0.0",
+
+    .fingerprint = 0xb70c48fe22661379, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
+
+    .dependencies = .{
+        .elyra = .{
+            .path = "../",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "gen_token_test.py",
+        "run_benchmark.sh",
+    },
+}
