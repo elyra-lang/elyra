@@ -340,6 +340,28 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
         } else if (is_left_angle_table[c]) {
             tokenize_left_angle(allocator, &i, text_ptr, &tokens);
             continue;
+        } else if (is_eq_table[c]) {
+            if (text_ptr[i + 1] == '>') {
+                tokens.append(.{
+                    .kind = @intFromEnum(TokenKind.Arrow),
+                    .position = i,
+                }) catch unreachable;
+                i += 1;
+                continue;
+            } else if (text_ptr[i + 1] == '=') {
+                tokens.append(.{
+                    .kind = @intFromEnum(TokenKind.Eq),
+                    .position = i,
+                }) catch unreachable;
+                i += 1;
+                continue;
+            } else {
+                tokens.append(.{
+                    .kind = @intFromEnum(TokenKind.Assign),
+                    .position = i,
+                }) catch unreachable;
+                continue;
+            }
         }
 
         if (c != 0) {
@@ -377,7 +399,7 @@ fn create_ascii_bool_table(comptime string: []const u8) [256]bool {
 
 const is_space_table = create_ascii_bool_table(&.{ ' ', '\t', '\n', '\r' });
 const is_identity_map_table = create_ascii_bool_table(&.{ '(', ')', '{', '}', '[', ']', ',', '.', ';', ':', '?' });
-const is_normal_op_table = create_ascii_bool_table(&.{ '/', '%', '&', '|', '^', '~', '!', '=' });
+const is_normal_op_table = create_ascii_bool_table(&.{ '/', '%', '&', '|', '^', '~', '!' });
 const is_complex_op_table = create_ascii_bool_table(&.{ '+', '-', '*' });
 const is_left_angle_table = create_ascii_bool_table(&.{'<'});
 const is_right_angle_table = create_ascii_bool_table(&.{'>'});
@@ -389,6 +411,7 @@ const is_comment_table = create_ascii_bool_table(&.{'#'});
 const is_alphanum_table = create_ascii_bool_table(&.{ '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' });
 const is_newline_table = create_ascii_bool_table(&.{ '\n', '\r' });
 const is_dot_table = create_ascii_bool_table(&.{'.'});
+const is_eq_table = create_ascii_bool_table(&.{'='});
 
 /// Creates a lookup table for ASCII characters to map to values.
 fn create_ascii_val_table(comptime string: []const u8, comptime vals: []const u8) [256]u8 {
