@@ -3,7 +3,8 @@ import argparse
 import string
 import sys
 
-# Token definitions based on the provided enum
+# (The TOKENS list is still defined for reference,
+# but note that we no longer output random tokens.)
 TOKENS = [
     "(", ")", "{", "}", "[", "]", ";", ".", ",", "?", "!", ":", "+", "+=", "+|", "+|=", "+%", "+%=",
     "-", "-=", "-|", "-|=", "-%", "-%=", "*", "*=", "*|", "*|=", "*%", "*%=", "/", "/=", "<", "<=", ">", ">=",
@@ -13,12 +14,12 @@ TOKENS = [
 ]
 
 WHITESPACE = [" ", "\n", "\t"]
-
 IDENTIFIER_CHARS = string.ascii_letters + string.digits + "_"
 
 
 def generate_identifier():
-    length = random.randint(3, 8)  # Identifier length between 3-8 chars
+    length = random.randint(3, 8)  # Identifier length between 3-8 characters
+    # Ensure the first character is a letter or underscore
     return "".join(random.choices(string.ascii_letters + "_", k=1)) + "".join(random.choices(IDENTIFIER_CHARS, k=length - 1))
 
 
@@ -53,12 +54,13 @@ def generate_binary_expression():
 
 def generate_statement():
     """
-    Generates an assignment statement. With a 50% chance, the assigned value is a binary expression.
+    Generates an assignment statement. With a 50% chance,
+    the assigned value is a binary expression.
     Otherwise, it is a simple identifier or literal.
     """
-    assignment_type = random.choice(["let", "var", ""])  # Optional let/var keyword
+    assignment_type = random.choice(["let", "var", ""])  # Optionally include a keyword
     variable = generate_identifier()
-    # 50% chance to use a binary operation
+    # 50% chance to use a binary expression
     if random.random() < 0.5:
         value = generate_binary_expression()
     else:
@@ -71,8 +73,8 @@ def generate_statement():
 
 def generate_function():
     """
-    Generates a function definition with a random name, parameters, a few statements, and a return.
-    Note: This generates multiple lines.
+    Generates a function definition with a random name, parameters,
+    a few statements, and a return value.
     """
     func_name = generate_identifier()
     param_count = random.randint(1, 4)
@@ -104,15 +106,11 @@ def generate_comment():
 
 def generate_random_line():
     """
-    Randomly selects one of the generator functions to produce a test data element.
-    Note: Some elements (like functions) may be multiline.
+    Randomly selects one of the generator functions to produce a code element.
+    Note: We have removed the option to insert random tokens.
     """
-    choice = random.choice(["tokens", "identifiers", "statement", "function", "comment"])
-    if choice == "tokens":
-        return random.choice(TOKENS)
-    elif choice == "identifiers":
-        return generate_identifier()
-    elif choice == "statement":
+    choice = random.choice(["statement", "function", "comment"])
+    if choice == "statement":
         return generate_statement()
     elif choice == "function":
         return generate_function()
@@ -120,16 +118,16 @@ def generate_random_line():
         return generate_comment()
 
 
-def generate_test_data(num_lines, output_file="test.ely"):
+def generate_elyra_code(num_lines, output_file="test.ely"):
     """
-    Generates test data ensuring the final output file contains exactly num_lines lines.
-    If a generated element is multiline, each line is counted.
+    Generates Elyra code ensuring the final output file contains exactly num_lines lines.
+    If a generated element spans multiple lines, each line is counted.
     """
     with open(output_file, "w", encoding="utf-8") as f:
         written_lines = 0
         while written_lines < num_lines:
             element = generate_random_line()
-            # Split element into individual lines (if any)
+            # Split multiline elements into individual lines
             lines = element.splitlines()
             for line in lines:
                 if written_lines < num_lines:
@@ -137,25 +135,25 @@ def generate_test_data(num_lines, output_file="test.ely"):
                     written_lines += 1
                 else:
                     break
-            # Show progress at every 1% or at least every line if num_lines is small
+            # Print progress at every 1% (or every line for small files)
             if written_lines % max(1, num_lines // 100) == 0:
                 progress = (written_lines * 100) // num_lines
                 sys.stdout.write(f"\rProgress: {progress}%")
                 sys.stdout.flush()
-    print("\nTest data generation complete!")
+    print("\nElyra code generation complete!")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate test data for tokenizer")
-    parser.add_argument("-l", "--lines", type=int, default=16384, help="Number of lines of test data")
-    parser.add_argument("-o", "--output", type=str, default="test.ely", help="Output file")
-    
+    parser = argparse.ArgumentParser(description="Generate valid Elyra code")
+    parser.add_argument("-l", "--lines", type=int, default=262144, help="Number of lines of Elyra code to generate")
+    parser.add_argument("-o", "--output", type=str, default="test.ely", help="Output file name")
+
     args = parser.parse_args()
-    
-    print(f"Generating {args.lines} lines of test data...")
-    generate_test_data(args.lines, args.output)
-    
-    print(f"Test data written to {args.output}")
+
+    print(f"Generating {args.lines} lines of Elyra code...")
+    generate_elyra_code(args.lines, args.output)
+
+    print(f"Elyra code written to {args.output}")
 
 
 if __name__ == "__main__":
