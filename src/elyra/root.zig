@@ -1,5 +1,6 @@
 pub const SourceObject = @import("source/SourceObject.zig");
 pub const Tokenizer = @import("tokenizer/tokenize.zig");
+pub const Parser = @import("parser/parse.zig");
 
 // We can put all tests here
 // This is a good way to test the whole project
