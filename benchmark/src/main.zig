@@ -19,7 +19,7 @@ fn find_n_newline_position(buffer: []const u8, n: usize) usize {
 }
 
 pub fn lexer_benchmark(gpa: std.mem.Allocator) !void {
-    std.debug.print("Lexer/lines\t\tIterations\tTime(us)\tToken/s\tLine/s\tByte/s\n", .{});
+    std.debug.print("Stage/lines\t\tIterations\tTime(us)\tToken/s\tLine/s\tByte/s\n", .{});
 
     var total_lines: u32 = 256;
     for (0..6) |_| {

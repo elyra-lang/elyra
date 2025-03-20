@@ -64,6 +64,7 @@ pub const TokenKind = enum(u8) {
     NotEq = 161, // !=
     Assign = 162, // =
     Eq = 163, // ==
+    Arrow = 255, // =>
 
     Less = 164, // <
     Greater = 165, // >
