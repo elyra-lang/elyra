@@ -18,9 +18,13 @@ fn find_n_newline_position(buffer: []const u8, n: usize) usize {
     return buffer.len;
 }
 
-pub fn lexer_benchmark(gpa: std.mem.Allocator) !void {
-    std.debug.print("Stage/lines\t\tIterations\tTime(us)\tToken/s\tLine/s\tByte/s\n", .{});
+const BenchmarkPhase = enum {
+    Lexer,
+    Parse,
+    Sema,
+};
 
+pub fn benchmark(gpa: std.mem.Allocator, phase: BenchmarkPhase) !void {
     var total_lines: u32 = 256;
     for (0..6) |_| {
         // Total lines
@@ -39,8 +43,13 @@ pub fn lexer_benchmark(gpa: std.mem.Allocator) !void {
             source_object.text = source_object.text[0..find_n_newline_position(source_object.text, total_lines)];
 
             const start_time = std.time.nanoTimestamp();
-            const token_buffer = try elyra.Tokenizer.tokenize(allocator, &source_object);
-            tokens = token_buffer.tokens.len;
+            var token_buffer = try elyra.Tokenizer.tokenize(allocator, &source_object);
+            if (phase == .Parse) {
+                const parse_tree = try elyra.Parser.parse(allocator, &token_buffer);
+                tokens = parse_tree.nodes.len;
+            } else {
+                tokens = token_buffer.tokens.len;
+            }
             bytes = source_object.text.len;
 
             const end_time = std.time.nanoTimestamp();
@@ -58,17 +67,11 @@ pub fn lexer_benchmark(gpa: std.mem.Allocator) !void {
         const mlines = avg_lines_per_second / 1_000_000.0;
         const mbps = avg_throughput / 1_000_000.0;
 
-        std.debug.print("Lexer/{}\t\t{}\t\t{}us\t\t{d:.2}M\t{d:.2}M\t{d:.2}M\n", .{ total_lines, its, @divTrunc(time, its * 1000), mtoken, mlines, mbps });
+        std.debug.print("{s}/{}\t\t{}\t\t{}us\t\t{d:.2}M\t{d:.2}M\t{d:.2}M\n", .{ @tagName(phase), total_lines, its, @divTrunc(time, its * 1000), mtoken, mlines, mbps });
 
         total_lines *= 4;
     }
 }
-
-const BenchmarkPhase = enum {
-    Lex,
-    Parse,
-    Sema,
-};
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -87,10 +90,10 @@ pub fn main() !void {
         std.posix.exit(1);
     }
 
-    var b_phase: BenchmarkPhase = .Lex;
+    var b_phase: BenchmarkPhase = .Lexer;
     if (arg_it.next()) |phase| {
         if (std.mem.eql(u8, phase, "lex")) {
-            b_phase = .Lex;
+            b_phase = .Lexer;
         } else if (std.mem.eql(u8, phase, "parse")) {
             b_phase = .Parse;
         } else if (std.mem.eql(u8, phase, "sema")) {
@@ -105,11 +108,11 @@ pub fn main() !void {
     }
 
     std.time.sleep(std.time.ns_per_s * 4);
+    std.debug.print("Stage/lines\t\tIterations\tTime(us)\tToken/s\tLine/s\tByte/s\n", .{});
+    try benchmark(allocator, .Lexer);
 
-    try lexer_benchmark(allocator);
-
-    if (b_phase == .Parse or b_phase == .Sema) {
-        @panic("Parse unimplemented!");
+    if (b_phase == .Parse) {
+        try benchmark(allocator, .Parse);
     }
 
     if (b_phase == .Sema) {
