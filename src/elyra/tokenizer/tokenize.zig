@@ -342,24 +342,24 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
             continue;
         } else if (is_eq_table[c]) {
             if (text_ptr[i + 1] == '>') {
-                tokens.append(.{
+                append(allocator, &tokens, Token{
                     .kind = @intFromEnum(TokenKind.Arrow),
                     .position = i,
-                }) catch unreachable;
+                });
                 i += 1;
                 continue;
             } else if (text_ptr[i + 1] == '=') {
-                tokens.append(.{
+                append(allocator, &tokens, Token{
                     .kind = @intFromEnum(TokenKind.Eq),
                     .position = i,
-                }) catch unreachable;
+                });
                 i += 1;
                 continue;
             } else {
-                tokens.append(.{
+                append(allocator, &tokens, Token{
                     .kind = @intFromEnum(TokenKind.Assign),
                     .position = i,
-                }) catch unreachable;
+                });
                 continue;
             }
         }

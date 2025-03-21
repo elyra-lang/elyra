@@ -1,0 +1,1 @@
+This file structure looks weird because it is used with the bulk_examples_generator crate to generate examples for the Elyra project. I'm just using it for demonstration purposes, requiring this weird file structure to not crash the generator.
