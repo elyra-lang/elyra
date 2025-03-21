@@ -246,3 +246,115 @@ test "ignore utf8 bom" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 3 },
     }, token_buffer.tokens);
 }
+
+test "arrow operator" {
+    const source = "a => b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Arrow), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+    }, token_buffer.tokens);
+}
+
+test "assign operator" {
+    const source = "a = b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Assign), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+    }, token_buffer.tokens);
+}
+
+test "equality operators" {
+    const source = "a == b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Eq), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+    }, token_buffer.tokens);
+}
+
+test "inequality operators" {
+    const source = "a != b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.NotEq), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+    }, token_buffer.tokens);
+}
+
+test "greater than operators" {
+    const source = "a > b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Greater), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+    }, token_buffer.tokens);
+}
+
+test "less than operators" {
+    const source = "a < b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Less), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+    }, token_buffer.tokens);
+}
+
+test "greater than or equal operators" {
+    const source = "a >= b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.GreaterEq), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+    }, token_buffer.tokens);
+}
+
+test "less than or equal operators" {
+    const source = "a <= b";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.LessEq), .position = 2 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+    }, token_buffer.tokens);
+}

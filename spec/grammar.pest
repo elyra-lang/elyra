@@ -1,0 +1,161 @@
+// Identifiers and Literals (implicit whitespace disabled)
+Name         = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHA | ASCII_DIGIT | "_")* }
+FloatLiteral = @{ ASCII_DIGIT ~ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT ~ ASCII_DIGIT* }
+IntLiteral   = @{ ASCII_DIGIT ~ ASCII_DIGIT* }
+
+// TODO: Unrestrict, this is a convenience for parsing fuzzer generation
+StringLiteral = @{ "\"" ~ (!("\"") ~ ASCII_ALPHANUMERIC)* ~ "\"" }
+CharLiteral   = @{ "'" ~ (!("'") ~ ASCII_ALPHANUMERIC) ~ "'" }
+
+// Punctuation and Delimiters
+LParen    = { "(" }
+RParen    = { ")" }
+LBrace    = { "{" }
+RBrace    = { "}" }
+LBracket  = { "[" }
+RBracket  = { "]" }
+Comma     = { "," }
+Dot       = { "." }
+Semicolon = { ";" }
+Colon     = { ":" }
+Nullable  = { "?" }
+
+// Operators
+Add            = { "+" }
+AddEq          = { "+=" }
+AddSat         = { "+|" }
+AddWrap        = { "+%" }
+AddSatEq       = { "+|=" }
+AddWrapEq      = { "+%=" }
+Sub            = { "-" }
+SubEq          = { "-=" }
+SubSat         = { "-|" }
+SubWrap        = { "-%" }
+SubSatEq       = { "-|=" }
+SubWrapEq      = { "-%=" }
+Mul            = { "*" }
+MulEq          = { "*=" }
+MulSat         = { "*|" }
+MulWrap        = { "*%" }
+MulSatEq       = { "*|=" }
+MulWrapEq      = { "*%=" }
+Div            = { "/" }
+DivEq          = { "/=" }
+Rem            = { "%" }
+RemEq          = { "%=" }
+BitAnd         = { "&" }
+BitAndEq       = { "&=" }
+BitOr          = { "|" }
+BitOrEq        = { "|=" }
+BitXor         = { "^" }
+BitXorEq       = { "^=" }
+BitNot         = { "~" }
+BitNotEq       = { "~=" }
+ErrUnion       = { "!" }
+NotEq          = { "!=" }
+Assign         = { "=" }
+Arrow          = { "=>" }
+Eq             = { "==" }
+Less           = { "<" }
+Greater        = { ">" }
+LessEq         = { "<=" }
+GreaterEq      = { ">=" }
+ShiftRight     = { ">>" }
+ShiftRightEq   = { ">>=" }
+ShiftLeft      = { "<<" }
+ShiftLeftEq    = { "<<=" }
+ShiftLeftSat   = { "<<|" }
+ShiftLeftSatEq = { "<<|=" }
+CurryArrow     = { "->" }
+AddUnary       = { "+" }
+// same literal as Add, used in unary context
+SubUnary = { "-" }
+// same literal as Sub, used in unary context
+
+// Keywords
+// TODO: Determine for loop syntax
+
+True       = @{ "true" }
+False      = @{ "false" }
+Null       = @{ "null" }
+BooleanAnd = @{ "and" }
+BooleanOr  = @{ "or" }
+Let        = @{ "let" }
+Var        = @{ "var" }
+Func       = @{ "func" }
+Return     = @{ "return" }
+Match      = @{ "match" }
+If         = @{ "if" }
+Else       = @{ "else" }
+Struct     = @{ "struct" }
+Trait      = @{ "trait" }
+Import     = @{ "import" }
+While      = @{ "while" }
+For        = @{ "for" }
+Break      = @{ "break" }
+Continue   = @{ "continue" }
+Temp       = @{ "temp" }
+Pub        = @{ "pub" }
+
+space = { " " }
+
+Identifier       = { Name ~ (Dot ~ Name)* }
+BoolLiteral      = { True | False }
+NullLiteral      = { Null }
+ImportExpression = { Import ~ space ~ StringLiteral ~ space }
+UnaryExpression  = { (AddUnary | SubUnary | BitNot) ~ Expression }
+BaseExpression   = { Identifier | FloatLiteral | CharLiteral | StringLiteral | IntLiteral | BoolLiteral | NullLiteral | ImportExpression | UnaryExpression }
+
+AssignOps                = { AddEq | AddSatEq | AddWrapEq | SubEq | SubSatEq | SubWrapEq | MulEq | MulSatEq | MulWrapEq | DivEq | RemEq | BitAndEq | BitOrEq | BitXorEq | BitNotEq | ShiftLeftEq | ShiftLeftSatEq | ShiftRightEq | BooleanAnd | BooleanOr | Eq | NotEq | Greater | Less | GreaterEq | LessEq }
+AssignExpression         = { Identifier ~ space ~ AssignOps ~ space ~ Expression ~ Semicolon }
+ReturnExpression         = { Return ~ space ~ Expression ~ Semicolon }
+BreakExpression          = { Break ~ space ~ Expression ~ Semicolon }
+ContinueExpression       = { Continue ~ space ~ Expression ~ Semicolon }
+BlockExclusiveExpression = { ReturnExpression | BreakExpression | ContinueExpression | AssignExpression }
+BlockExpression          = { LBrace ~ (StandaloneExpression | BlockExclusiveExpression)* ~ RBrace }
+
+IfExpression    = { If ~ space ~ LParen ~ Expression ~ RParen ~ space ~ Expression ~ (space ~ Else ~ space ~ Expression)? }
+WhileExpression = { While ~ space ~ LParen ~ Expression ~ RParen ~ space ~ BlockExpression ~ (space ~ Else ~ space ~ Expression)? }
+
+Pattern         = { Identifier | FloatLiteral | CharLiteral | StringLiteral | IntLiteral | BoolLiteral | NullLiteral }
+Patterns        = { Pattern ~ (Comma ~ space ~ Pattern)* }
+MatchArm        = { Patterns ~ space ~ Arrow ~ space ~ Expression ~ Comma ~ "\n" }
+MatchExpression = { Match ~ space ~ LParen ~ Expression ~ RParen ~ space ~ LBrace ~ "\n" ~ MatchArm* ~ RBrace ~ "\n" }
+
+CallExpression = { Identifier ~ LParen ~ (Expression ~ (Comma ~ space ~ Expression)*)? ~ RParen }
+
+StructMember     = { Name ~ TypeSpecifier ~ Comma ~ "\n" }
+StructExpression = { Struct ~ space ~ LBrace ~ "\n" ~ StructMember* ~ Declaration* ~ RBrace }
+
+Argument     = { Name ~ TypeSpecifier }
+ArgumentList = { Argument ~ (Comma ~ space ~ Argument)* }
+
+ReturnType      = { Identifier ~ ErrUnion ~ Type | Type }
+FuncPrototype   = { Func ~ space ~ LParen ~ ArgumentList ~ RParen ~ space ~ CurryArrow ~ space ~ ReturnType }
+FuncDefinition  = { Func ~ space ~ LParen ~ ArgumentList ~ RParen ~ space ~ CurryArrow ~ space ~ ReturnType ~ space ~ BlockExpression }
+TraitMember     = { Name ~ Colon ~ space ~ (FuncPrototype | FuncDefinition) ~ Comma ~ "\n" }
+TraitExpression = { Trait ~ space ~ LBrace ~ "\n" ~ TraitMember* ~ RBrace }
+
+StandaloneExpression = { CallExpression | IfExpression | WhileExpression | BlockExpression | MatchExpression }
+PrimaryExpression    = { LParen ~ (BaseExpression | StandaloneExpression) ~ RParen | (BaseExpression | StandaloneExpression) }
+
+// Precedence determined by operator precedence table
+BinOp            = { Add | AddWrap | AddSat | Sub | SubWrap | SubSat | Mul | MulWrap | MulSat | Div | Rem | BitAnd | BitOr | BitXor | ShiftLeft | ShiftLeftSat | ShiftRight }
+BinaryExpression = { PrimaryExpression ~ (" " ~ BinOp ~ " " ~ PrimaryExpression)* }
+Expression       = { BinaryExpression }
+
+Array         = { LBracket ~ (Identifier | IntLiteral) ~ RBracket }
+Slice         = { LBracket ~ RBracket }
+Modifier      = { Nullable | Array | Slice ~ Modifier }
+Type          = { (Temp ~ space)? ~ (Modifier)? ~ (Identifier) }
+TypeSpecifier = { Colon ~ space ~ (Temp ~ space)? ~ (Modifier)? ~ (Identifier) }
+
+BindingDeclaration  = { (Pub ~ space)? ~ Let ~ space ~ Name ~ space ~ Assign ~ space ~ (StructExpression | TraitExpression | FuncDefinition) ~ Semicolon ~ "\n" }
+VariableDeclaration = { (Pub ~ space)? ~ (Let | Var) ~ space ~ Name ~ space ~ (TypeSpecifier ~ space)? ~ Assign ~ space ~ (Expression) ~ Semicolon ~ "\n" }
+Declaration         = { BindingDeclaration | VariableDeclaration }
+
+// Comments (completely ignored by the parser)
+// Note: This rule expects a '#' followed by any characters until a newline, then a semicolon.
+COMMENT = _{ "#" ~ (!("\n") ~ ANY*) ~ "\n" }
+
+PROGRAM = { (Declaration | StructMember)* }
