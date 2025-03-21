@@ -1,6 +1,8 @@
 .zig-cache
 zig-out
 
+coverage
+
 # Testing file
 test.ely
 

@@ -268,6 +268,8 @@ test "too large input" {
     const token_buffer = tokenize(arena.allocator(), &source_object);
 
     try testing.expectError(error.TooLarge, token_buffer);
+}
+
 test "arrow operator" {
     const source = "a => b";
 
