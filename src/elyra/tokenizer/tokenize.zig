@@ -8,7 +8,7 @@ const Token = types.Token;
 const TokenKind = types.TokenKind;
 const TokenBuffer = types.TokenBuffer;
 
-pub const TokenizeError = error {
+pub const TokenizeError = error{
     TooLarge,
     UnexpectedCharacter,
 };
