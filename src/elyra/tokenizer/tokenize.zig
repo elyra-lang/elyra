@@ -7,6 +7,7 @@ const SourceObject = @import("../source/SourceObject.zig");
 const Token = types.Token;
 const TokenKind = types.TokenKind;
 const TokenBuffer = types.TokenBuffer;
+const Mapping = types.Mapping;
 
 pub const TokenizeError = error{
     TooLarge,
@@ -16,7 +17,7 @@ pub const TokenizeError = error{
 /// Convenience object to hold the state of the tokenizer.
 const TokenizerState = struct {
     source: *SourceObject,
-    tokens: std.ArrayList(Token),
+    tokens: std.ArrayListUnmananged(Token),
 };
 
 /// Keyword Map
@@ -45,7 +46,7 @@ const KeywordPairs = .{
     .{ "pub", .Pub },
 };
 
-inline fn tokenize_kw_or_identifier(i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayList(Token), kmap: @TypeOf(&KeywordMap.initComptime(KeywordPairs))) void {
+inline fn tokenize_kw_or_identifier(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayListUnmanaged(Token), kmap: @TypeOf(&KeywordMap.initComptime(KeywordPairs))) void {
     const pos = i.*;
 
     i.* += 1;
@@ -54,32 +55,32 @@ inline fn tokenize_kw_or_identifier(i: *u24, text_ptr: [*]const u8, tokens: *std
 
     // It can be a keyword
     if (kmap.get(slice)) |kw| {
-        tokens.append(.{
+        append(allocator, tokens, Token{
             .kind = @intFromEnum(kw),
             .position = pos,
-        }) catch unreachable;
+        });
     } else {
-        tokens.append(.{
+        append(allocator, tokens, Token{
             .kind = @intFromEnum(TokenKind.Identifier),
             .position = pos,
-        }) catch unreachable;
+        });
     }
 }
 
-inline fn tokenize_string(i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayList(Token)) void {
+inline fn tokenize_string(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayListUnmanaged(Token)) void {
     const pos = i.*;
 
     i.* += 1;
     while (!is_string_table[text_ptr[i.*]]) : (i.* += 1) {}
     i.* += 1;
 
-    tokens.append(.{
+    append(allocator, tokens, Token{
         .kind = @intFromEnum(TokenKind.StringLiteral),
         .position = pos,
-    }) catch unreachable;
+    });
 }
 
-inline fn tokenize_numliteral(i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayList(Token), value_table: *std.ArrayList(u64), mapping_table: *std.ArrayList(types.Mapping)) void {
+inline fn tokenize_numliteral(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayListUnmanaged(Token), value_table: *std.ArrayListUnmanaged(u64), mapping_table: *std.ArrayListUnmanaged(Mapping)) void {
     const pos = i.*;
 
     var kind = TokenKind.IntLiteral;
@@ -92,23 +93,23 @@ inline fn tokenize_numliteral(i: *u24, text_ptr: [*]const u8, tokens: *std.Array
         }
     }
 
-    value_table.append(if (kind == .IntLiteral)
+    value_table.append(allocator, if (kind == .IntLiteral)
         @bitCast(std.fmt.parseInt(u64, text_ptr[pos..i.*], 0) catch unreachable)
     else
         @bitCast(std.fmt.parseFloat(f64, text_ptr[pos..i.*]) catch unreachable)) catch unreachable;
 
-    tokens.append(.{
+    append(allocator, tokens, Token{
         .kind = @intFromEnum(kind),
         .position = pos,
-    }) catch unreachable;
+    });
 
-    mapping_table.append(.{
+    append(allocator, mapping_table, Mapping{
         .token = @bitCast(tokens.items[tokens.items.len - 1]),
         .index = @intCast(value_table.items.len - 1),
-    }) catch unreachable;
+    });
 }
 
-inline fn tokenize_complex_op(i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayList(Token)) void {
+inline fn tokenize_complex_op(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayListUnmanaged(Token)) void {
     const c = text_ptr[i.*];
     var base = complex_op_map_table[c];
     const pos = i.*;
@@ -152,86 +153,90 @@ inline fn tokenize_complex_op(i: *u24, text_ptr: [*]const u8, tokens: *std.Array
         },
     }
 
-    tokens.append(.{
+    append(allocator, tokens, Token{
         .kind = base,
         .position = pos,
-    }) catch unreachable;
+    });
 }
 
-inline fn tokenize_left_angle(i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayList(Token)) void {
+inline fn tokenize_left_angle(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayListUnmanaged(Token)) void {
     const pos = i.*;
 
     if (text_ptr[i.* + 1] == '<') {
         if (text_ptr[i.* + 2] == '|') {
             if (text_ptr[i.* + 3] == '=') {
-                tokens.append(.{
+                append(allocator, tokens, Token{
                     .kind = @intFromEnum(TokenKind.ShiftLeftSatEq),
                     .position = pos,
-                }) catch unreachable;
+                });
                 i.* += 3;
             } else {
-                tokens.append(.{
+                append(allocator, tokens, Token{
                     .kind = @intFromEnum(TokenKind.ShiftLeftSat),
                     .position = pos,
-                }) catch unreachable;
+                });
                 i.* += 2;
             }
         } else if (text_ptr[i.* + 2] == '=') {
-            tokens.append(.{
+            append(allocator, tokens, Token{
                 .kind = @intFromEnum(TokenKind.ShiftLeftEq),
                 .position = pos,
-            }) catch unreachable;
+            });
             i.* += 2;
         } else {
-            tokens.append(.{
+            append(allocator, tokens, Token{
                 .kind = @intFromEnum(TokenKind.ShiftLeft),
                 .position = pos,
-            }) catch unreachable;
+            });
             i.* += 1;
         }
     } else if (text_ptr[i.* + 1] == '=') {
-        tokens.append(.{
+        append(allocator, tokens, Token{
             .kind = @intFromEnum(TokenKind.LessEq),
             .position = pos,
-        }) catch unreachable;
+        });
         i.* += 1;
     } else {
-        tokens.append(.{
+        append(allocator, tokens, Token{
             .kind = @intFromEnum(TokenKind.Less),
             .position = pos,
-        }) catch unreachable;
+        });
     }
 }
 
-inline fn tokenize_right_angle(i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayList(Token)) void {
+inline fn tokenize_right_angle(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]const u8, tokens: *std.ArrayListUnmanaged(Token)) void {
     const pos = i.*;
 
     if (text_ptr[i.* + 1] == '>') {
         if (text_ptr[i.* + 2] == '=') {
-            tokens.append(.{
+            append(allocator, tokens, Token{
                 .kind = @intFromEnum(TokenKind.ShiftRightEq),
                 .position = pos,
-            }) catch unreachable;
+            });
             i.* += 2;
         } else {
-            tokens.append(.{
+            append(allocator, tokens, Token{
                 .kind = @intFromEnum(TokenKind.ShiftRight),
                 .position = pos,
-            }) catch unreachable;
+            });
             i.* += 1;
         }
     } else if (text_ptr[i.* + 1] == '=') {
-        tokens.append(.{
+        append(allocator, tokens, Token{
             .kind = @intFromEnum(TokenKind.GreaterEq),
             .position = pos,
-        }) catch unreachable;
+        });
         i.* += 1;
     } else {
-        tokens.append(.{
+        append(allocator, tokens, Token{
             .kind = @intFromEnum(TokenKind.Greater),
             .position = pos,
-        }) catch unreachable;
+        });
     }
+}
+
+fn append(allocator: std.mem.Allocator, list: anytype, item: anytype) void {
+    list.append(allocator, item) catch @panic("Tokenizer: OOM");
 }
 
 /// Tokenizes a source object.
@@ -258,9 +263,9 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
         return TokenizeError.TooLarge;
     }
 
-    var tokens = std.ArrayList(Token).initCapacity(allocator, source.text.len / 4) catch @panic("Tokenizer: OOM");
-    var mapping_table = std.ArrayList(types.Mapping).initCapacity(allocator, source.text.len / 4) catch @panic("Tokenizer: OOM");
-    var value_table = std.ArrayList(u64).initCapacity(allocator, source.text.len / 4) catch @panic("Tokenizer: OOM");
+    var tokens = std.ArrayListUnmanaged(Token).initCapacity(allocator, source.text.len / 4) catch @panic("Tokenizer: OOM");
+    var mapping_table = std.ArrayListUnmanaged(types.Mapping).initCapacity(allocator, source.text.len / 4) catch @panic("Tokenizer: OOM");
+    var value_table = std.ArrayListUnmanaged(u64).initCapacity(allocator, source.text.len / 4) catch @panic("Tokenizer: OOM");
 
     const text_ptr = source.text.ptr;
     var i: u24 = 0;
@@ -285,7 +290,7 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
         if (is_space_table[c]) {
             continue;
         } else if (is_num_table[c]) {
-            tokenize_numliteral(&i, text_ptr, &tokens, &value_table, &mapping_table);
+            tokenize_numliteral(allocator, &i, text_ptr, &tokens, &value_table, &mapping_table);
             continue;
         } else if (is_comment_table[c]) {
             // Find newline
@@ -293,22 +298,22 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
             i += 1;
             continue;
         } else if (is_identity_map_table[c]) {
-            tokens.append(.{
+            append(allocator, &tokens, Token{
                 .kind = c,
                 .position = i,
-            }) catch unreachable;
+            });
             continue;
         } else if (is_alpha_table[c]) {
-            tokenize_kw_or_identifier(&i, text_ptr, &tokens, &kmap);
+            tokenize_kw_or_identifier(allocator, &i, text_ptr, &tokens, &kmap);
             continue;
         } else if (is_string_table[c]) {
-            tokenize_string(&i, text_ptr, &tokens);
+            tokenize_string(allocator, &i, text_ptr, &tokens);
             continue;
         } else if (is_char_table[c]) {
-            tokens.append(.{
+            append(allocator, &tokens, Token{
                 .kind = @intFromEnum(TokenKind.CharLiteral),
                 .position = i,
-            }) catch unreachable;
+            });
 
             i += 2;
             continue;
@@ -321,19 +326,19 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
                 i += 1;
             }
 
-            tokens.append(.{
+            append(allocator, &tokens, Token{
                 .kind = base,
                 .position = pos,
-            }) catch unreachable;
+            });
             continue;
         } else if (is_complex_op_table[c]) {
-            tokenize_complex_op(&i, text_ptr, &tokens);
+            tokenize_complex_op(allocator, &i, text_ptr, &tokens);
             continue;
         } else if (is_right_angle_table[c]) {
-            tokenize_right_angle(&i, text_ptr, &tokens);
+            tokenize_right_angle(allocator, &i, text_ptr, &tokens);
             continue;
         } else if (is_left_angle_table[c]) {
-            tokenize_left_angle(&i, text_ptr, &tokens);
+            tokenize_left_angle(allocator, &i, text_ptr, &tokens);
             continue;
         }
 
@@ -345,15 +350,15 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
     }
 
     // Reclaim memory from the tokens array if overallocated
-    tokens.shrinkAndFree(tokens.items.len);
-    value_table.shrinkAndFree(value_table.items.len);
+    tokens.shrinkAndFree(allocator, tokens.items.len);
+    value_table.shrinkAndFree(allocator, value_table.items.len);
 
     return .{
         .backing_allocator = allocator,
         .source = source,
-        .tokens = tokens.toOwnedSlice() catch @panic("Tokenizer: OOM"),
-        .mapping_table = mapping_table.toOwnedSlice() catch @panic("Tokenizer: OOM"),
-        .value_table = value_table.toOwnedSlice() catch @panic("Tokenizer: OOM"),
+        .tokens = tokens.toOwnedSlice(allocator) catch @panic("Tokenizer: OOM"),
+        .mapping_table = mapping_table.toOwnedSlice(allocator) catch @panic("Tokenizer: OOM"),
+        .value_table = value_table.toOwnedSlice(allocator) catch @panic("Tokenizer: OOM"),
     };
 }
 
