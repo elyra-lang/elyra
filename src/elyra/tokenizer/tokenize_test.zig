@@ -246,3 +246,26 @@ test "ignore utf8 bom" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 3 },
     }, token_buffer.tokens);
 }
+
+test "invalid character" {
+    const source = "hello \x81 world";
+
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+
+    var source_object = try SourceObject.init_from_buffer(arena.allocator(), "test.ely", source);
+    const token_buffer = tokenize(arena.allocator(), &source_object);
+
+    try testing.expectError(error.UnexpectedCharacter, token_buffer);
+}
+
+test "too large input" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+
+    const input = try arena.allocator().alloc(u8, 1024 * 1024 * 32);
+    var source_object = try SourceObject.init_from_buffer(arena.allocator(), "test.ely", input);
+    const token_buffer = tokenize(arena.allocator(), &source_object);
+
+    try testing.expectError(error.TooLarge, token_buffer);
+}
