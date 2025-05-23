@@ -109,12 +109,10 @@ def generate_random_line():
     Randomly selects one of the generator functions to produce a code element.
     Note: We have removed the option to insert random tokens.
     """
-    choice = random.choice(["statement", "function", "comment"])
-    if choice == "statement":
-        return generate_statement()
-    elif choice == "function":
+    choice = random.choice(["function", "function", "comment"])
+    if choice == "function":
         return generate_function()
-    elif choice == "comment":
+    else:
         return generate_comment()
 
 

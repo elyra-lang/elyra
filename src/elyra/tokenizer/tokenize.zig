@@ -50,8 +50,8 @@ inline fn tokenize_kw_or_identifier(allocator: std.mem.Allocator, i: *u24, text_
     const pos = i.*;
 
     i.* += 1;
-    while (is_alphanum_table[text_ptr[i.*]]) : (i.* += 1) {}
-    const slice = text_ptr[pos..i.*];
+    while (is_alphanum_table[text_ptr[i.* + 1]]) : (i.* += 1) {}
+    const slice = text_ptr[pos .. i.* + 1];
 
     // It can be a keyword
     if (kmap.get(slice)) |kw| {
@@ -72,7 +72,6 @@ inline fn tokenize_string(allocator: std.mem.Allocator, i: *u24, text_ptr: [*]co
 
     i.* += 1;
     while (!is_string_table[text_ptr[i.*]]) : (i.* += 1) {}
-    i.* += 1;
 
     append(allocator, tokens, Token{
         .kind = @intFromEnum(TokenKind.StringLiteral),
@@ -84,19 +83,19 @@ inline fn tokenize_numliteral(allocator: std.mem.Allocator, i: *u24, text_ptr: [
     const pos = i.*;
 
     var kind = TokenKind.IntLiteral;
-    while (is_num_table[text_ptr[i.*]] or is_dot_table[text_ptr[i.*]]) : (i.* += 1) {
-        if (is_dot_table[text_ptr[i.*]]) {
+    while (is_num_table[text_ptr[i.* + 1]] or is_dot_table[text_ptr[i.* + 1]]) : (i.* += 1) {
+        if (is_dot_table[text_ptr[i.* + 1]]) {
             i.* += 1;
-            while (is_num_table[text_ptr[i.*]]) : (i.* += 1) {}
+            while (is_num_table[text_ptr[i.* + 1]]) : (i.* += 1) {}
             kind = TokenKind.FloatLiteral;
             break;
         }
     }
 
     value_table.append(allocator, if (kind == .IntLiteral)
-        @bitCast(std.fmt.parseInt(u64, text_ptr[pos..i.*], 0) catch unreachable)
+        @bitCast(std.fmt.parseInt(u64, text_ptr[pos .. i.* + 1], 0) catch unreachable)
     else
-        @bitCast(std.fmt.parseFloat(f64, text_ptr[pos..i.*]) catch unreachable)) catch unreachable;
+        @bitCast(std.fmt.parseFloat(f64, text_ptr[pos .. i.* + 1]) catch unreachable)) catch unreachable;
 
     append(allocator, tokens, Token{
         .kind = @intFromEnum(kind),
@@ -370,6 +369,10 @@ pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) To
             return TokenizeError.UnexpectedCharacter;
         }
     }
+    append(allocator, &tokens, Token{
+        .kind = @intFromEnum(TokenKind.EndOfFile),
+        .position = @intCast(source.text.len),
+    });
 
     // Reclaim memory from the tokens array if overallocated
     tokens.shrinkAndFree(allocator, tokens.items.len);
