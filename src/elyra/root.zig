@@ -7,4 +7,5 @@ pub const Parser = @import("parser/parse.zig");
 comptime {
     _ = @import("source/SourceObject.zig"); // This one we just have one test in, no separate file
     _ = @import("tokenizer/tokenize_test.zig"); // Everything else follows this pattern
+    _ = @import("parser/parse_test.zig");
 }

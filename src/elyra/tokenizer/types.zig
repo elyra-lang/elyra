@@ -109,6 +109,7 @@ pub const TokenKind = enum(u8) {
     Continue,
     Temp,
     Pub,
+    EndOfFile,
 };
 
 pub const Mapping = struct {

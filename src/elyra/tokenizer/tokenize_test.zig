@@ -27,6 +27,7 @@ test "basic identity tokens" {
         .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 8 },
         .{ .kind = @intFromEnum(TokenKind.Colon), .position = 9 },
         .{ .kind = @intFromEnum(TokenKind.Nullable), .position = 10 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -37,7 +38,9 @@ test "whitespace skipping" {
     var token_buffer = try tokenize(testing.allocator, &source_object);
     defer token_buffer.deinit();
 
-    try testing.expectEqualSlices(Token, &.{}, token_buffer.tokens);
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
 }
 
 test "whitespace skipping characters" {
@@ -50,6 +53,7 @@ test "whitespace skipping characters" {
     try testing.expectEqualSlices(Token, &.{
         .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 5 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -81,6 +85,7 @@ test "add sub mul operator suite" {
         .{ .kind = @intFromEnum(TokenKind.MulWrap), .position = 48 },
         .{ .kind = @intFromEnum(TokenKind.MulWrapEq), .position = 51 },
         .{ .kind = @intFromEnum(TokenKind.MulSatEq), .position = 55 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -93,6 +98,7 @@ test "curry operator" {
 
     try testing.expectEqualSlices(Token, &.{
         .{ .kind = @intFromEnum(TokenKind.CurryArrow), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -114,6 +120,7 @@ test "normal operator" {
         .{ .kind = @intFromEnum(TokenKind.BitOrEq), .position = 17 },
         .{ .kind = @intFromEnum(TokenKind.BitXor), .position = 20 },
         .{ .kind = @intFromEnum(TokenKind.BitXorEq), .position = 22 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -130,6 +137,7 @@ test "unary operators" {
         .{ .kind = @intFromEnum(TokenKind.AddUnary), .position = 4 },
         .{ .kind = @intFromEnum(TokenKind.SubUnary), .position = 5 },
         .{ .kind = @intFromEnum(TokenKind.Dot), .position = 6 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -145,6 +153,7 @@ test "comparison operators" {
         .{ .kind = @intFromEnum(TokenKind.Greater), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.LessEq), .position = 4 },
         .{ .kind = @intFromEnum(TokenKind.GreaterEq), .position = 7 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -162,6 +171,7 @@ test "shift operators" {
         .{ .kind = @intFromEnum(TokenKind.ShiftRightEq), .position = 10 },
         .{ .kind = @intFromEnum(TokenKind.ShiftLeftSat), .position = 14 },
         .{ .kind = @intFromEnum(TokenKind.ShiftLeftSatEq), .position = 18 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -177,6 +187,7 @@ test "literals" {
         .{ .kind = @intFromEnum(TokenKind.StringLiteral), .position = 4 },
         .{ .kind = @intFromEnum(TokenKind.IntLiteral), .position = 13 },
         .{ .kind = @intFromEnum(TokenKind.FloatLiteral), .position = 20 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -190,6 +201,7 @@ test "identifier" {
     try testing.expectEqualSlices(Token, &.{
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 6 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -200,7 +212,9 @@ test "comment" {
     var token_buffer = try tokenize(testing.allocator, &source_object);
     defer token_buffer.deinit();
 
-    try testing.expectEqualSlices(Token, &.{}, token_buffer.tokens);
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
 }
 
 test "keywords" {
@@ -232,6 +246,7 @@ test "keywords" {
         .{ .kind = @intFromEnum(TokenKind.Continue), .position = 93 },
         .{ .kind = @intFromEnum(TokenKind.Temp), .position = 102 },
         .{ .kind = @intFromEnum(TokenKind.Pub), .position = 107 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -244,6 +259,7 @@ test "ignore utf8 bom" {
 
     try testing.expectEqualSlices(Token, &.{
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 3 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -281,6 +297,7 @@ test "arrow operator" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Arrow), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -295,6 +312,7 @@ test "assign operator" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Assign), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -309,6 +327,7 @@ test "equality operators" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Eq), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -323,6 +342,7 @@ test "inequality operators" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.NotEq), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -337,6 +357,7 @@ test "greater than operators" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Greater), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -351,6 +372,7 @@ test "less than operators" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.Less), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -365,6 +387,7 @@ test "greater than or equal operators" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.GreaterEq), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
 
@@ -379,5 +402,91 @@ test "less than or equal operators" {
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 0 },
         .{ .kind = @intFromEnum(TokenKind.LessEq), .position = 2 },
         .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 5 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
+}
+
+test "float literal parsing bug" {
+    const source = "let PI = 3.14159;";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Let), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.Assign), .position = 7 },
+        .{ .kind = @intFromEnum(TokenKind.FloatLiteral), .position = 9 },
+        .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 16 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
+}
+
+test "int literal parsing bug" {
+    const source = "let PI = 3;";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Let), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.Assign), .position = 7 },
+        .{ .kind = @intFromEnum(TokenKind.IntLiteral), .position = 9 },
+        .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 10 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
+}
+
+test "string literal parsing bug" {
+    const source = "let PI = \"3.14159\";";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Let), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.Assign), .position = 7 },
+        .{ .kind = @intFromEnum(TokenKind.StringLiteral), .position = 9 },
+        .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 18 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
+}
+
+test "char literal parsing bug" {
+    const source = "let PI = 'c';";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Let), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.Assign), .position = 7 },
+        .{ .kind = @intFromEnum(TokenKind.CharLiteral), .position = 9 },
+        .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 12 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
+    }, token_buffer.tokens);
+}
+
+test "identifier parsing bug" {
+    const source = "let PI = pi;";
+
+    var source_object = try SourceObject.init_from_buffer(testing.allocator, "test.ely", source);
+    var token_buffer = try tokenize(testing.allocator, &source_object);
+    defer token_buffer.deinit();
+
+    try testing.expectEqualSlices(Token, &.{
+        .{ .kind = @intFromEnum(TokenKind.Let), .position = 0 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 4 },
+        .{ .kind = @intFromEnum(TokenKind.Assign), .position = 7 },
+        .{ .kind = @intFromEnum(TokenKind.Identifier), .position = 9 },
+        .{ .kind = @intFromEnum(TokenKind.Semicolon), .position = 11 },
+        .{ .kind = @intFromEnum(TokenKind.EndOfFile), .position = @intCast(source.len) },
     }, token_buffer.tokens);
 }
