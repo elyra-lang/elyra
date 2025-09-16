@@ -9,7 +9,7 @@ on:
       - master
 
 env:
-  zig_version: 0.14.0
+  zig_version: 0.15.1
 
 jobs:
   build:
