@@ -1,7 +1,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const types = @import("types.zig");
-const ztracy = @import("ztracy");
+// const ztracy = @import("ztracy");
 
 const SourceObject = @import("../source/SourceObject.zig");
 const Token = types.Token;
@@ -254,8 +254,8 @@ fn append(allocator: std.mem.Allocator, list: anytype, item: anytype) void {
 /// The tokenization process is not guaranteed to be thread-safe, but is parallelizable.
 pub noinline fn tokenize(allocator: std.mem.Allocator, source: *SourceObject) TokenizeError!TokenBuffer {
     // Start the Tracy frame for the tokenizer
-    ztracy.FrameMarkStart("Tokenize");
-    defer ztracy.FrameMarkEnd("Tokenize");
+    // ztracy.FrameMarkStart("Tokenize");
+    // defer ztracy.FrameMarkEnd("Tokenize");
 
     if (source.text.len >= std.math.maxInt(u24)) {
         std.debug.print("Tokenizer: Source text is too large, consider splitting into multiple files. Size: {} bytes\n", .{source.text.len});

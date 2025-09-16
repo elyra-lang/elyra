@@ -1,46 +1,46 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const options = .{
-        .enable_ztracy = b.option(
-            bool,
-            "enable_ztracy",
-            "Enable Tracy profile markers",
-        ) orelse false,
-        .enable_fibers = b.option(
-            bool,
-            "enable_fibers",
-            "Enable Tracy fiber support",
-        ) orelse false,
-        .on_demand = b.option(
-            bool,
-            "on_demand",
-            "Build tracy with TRACY_ON_DEMAND",
-        ) orelse false,
-        .coverage = b.option(
-            bool,
-            "coverage",
-            "Enable coverage reporting",
-        ) orelse false,
-    };
+    // const options = .{
+    //     .enable_ztracy = b.option(
+    //         bool,
+    //         "enable_ztracy",
+    //         "Enable Tracy profile markers",
+    //     ) orelse false,
+    //     .enable_fibers = b.option(
+    //         bool,
+    //         "enable_fibers",
+    //         "Enable Tracy fiber support",
+    //     ) orelse false,
+    //     .on_demand = b.option(
+    //         bool,
+    //         "on_demand",
+    //         "Build tracy with TRACY_ON_DEMAND",
+    //     ) orelse false,
+    //     .coverage = b.option(
+    //         bool,
+    //         "coverage",
+    //         "Enable coverage reporting",
+    //     ) orelse false,
+    // };
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
     // === Build the app === //
 
-    const ztracy = b.dependency("ztracy", .{
-        .enable_ztracy = options.enable_ztracy,
-        .enable_fibers = options.enable_fibers,
-        .on_demand = options.on_demand,
-    });
+    // const ztracy = b.dependency("ztracy", .{
+    //     .enable_ztracy = options.enable_ztracy,
+    //     .enable_fibers = options.enable_fibers,
+    //     .on_demand = options.on_demand,
+    // });
 
     const lib_mod = b.createModule(.{
         .root_source_file = b.path("src/elyra/root.zig"),
         .target = target,
         .optimize = optimize,
     });
-    lib_mod.addImport("ztracy", ztracy.module("root"));
+    // lib_mod.addImport("ztracy", ztracy.module("root"));
 
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
@@ -59,9 +59,8 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "elyrac",
         .root_module = exe_mod,
-        .omit_frame_pointer = true,
     });
-    exe.linkLibrary(ztracy.artifact("tracy"));
+    // exe.linkLibrary(ztracy.artifact("tracy"));
     b.installArtifact(exe);
 
     // === Run the app === //

@@ -107,7 +107,7 @@ pub fn main() !void {
         std.posix.exit(1);
     }
 
-    std.time.sleep(std.time.ns_per_s * 4);
+    std.Thread.sleep(std.time.ns_per_s * 4);
     std.debug.print("Stage/lines\t\tIterations\tTime(us)\tToken/s\tLine/s\tByte/s\n", .{});
     try benchmark(allocator, .Lexer);
 

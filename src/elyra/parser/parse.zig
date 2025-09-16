@@ -38,8 +38,8 @@ fn debug_print(comptime format: []const u8, args: anytype) void {
 
 /// Context shared between parser states.
 const ParserContext = struct {
-    nodes: std.ArrayList(ParseNode),
-    stack: std.ArrayList(ParserState),
+    nodes: std.array_list.Managed(ParseNode),
+    stack: std.array_list.Managed(ParserState),
     tokenize_buffer: *TokenBuffer,
     curr_idx: usize,
 
@@ -127,8 +127,8 @@ const ParserContext = struct {
 
 pub fn parse(allocator: std.mem.Allocator, token_buffer: *TokenBuffer) !ParseTree {
     var state = ParserContext{
-        .nodes = std.ArrayList(ParseNode).initCapacity(allocator, token_buffer.tokens.len) catch @panic("Parser: OOM!"),
-        .stack = std.ArrayList(ParserState).initCapacity(allocator, 4096) catch @panic("Parser: OOM!"),
+        .nodes = std.array_list.Managed(ParseNode).initCapacity(allocator, token_buffer.tokens.len) catch @panic("Parser: OOM!"),
+        .stack = std.array_list.Managed(ParserState).initCapacity(allocator, 4096) catch @panic("Parser: OOM!"),
         .tokenize_buffer = token_buffer,
         .curr_idx = 0,
     };
